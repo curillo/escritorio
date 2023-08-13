@@ -6,6 +6,7 @@ import {
   autoUpdater,
   nativeTheme,
 } from 'electron'
+import { shell } from '../lib/app-shell'
 import { Emitter, Disposable } from 'event-kit'
 import { encodePathAsUrl } from '../lib/path'
 import {
@@ -322,6 +323,28 @@ export class AppWindow {
       const menu = menuFromElectronMenu(appMenu)
       ipcWebContents.send(this.window.webContents, 'app-menu', menu)
     }
+  }
+
+  /** Handle when a modal dialog is opened. */
+  public dialogDidOpen() {
+    if (this.window.isFocused()) {
+      // No additional notifications are needed.
+      return
+    }
+    // Care is taken to mimic OS dialog behaviors.
+    if (__DARWIN__) {
+      // macOS beeps when a modal dialog is opened.
+      shell.beep()
+    }
+    // macOS: https://developer.apple.com/documentation/appkit/nsapplication/1428358-requestuserattention
+    // "If the inactive app presents a modal panel, this method will be invoked with NSCriticalRequest
+    // automatically. The modal panel is not brought to the front for an inactive app."
+    // Windows: https://learn.microsoft.com/en-us/windows/win32/uxguide/winenv-taskbar#taskbar-button-flashing
+    // "If an inactive program requires immediate attention,
+    // flash its taskbar button to draw attention and leave it highlighted."
+    // It advises not to beep.
+    this.window.once('focus', () => this.window.flashFrame(false))
+    this.window.flashFrame(true)
   }
 
   /** Send a certificate error to the renderer. */
