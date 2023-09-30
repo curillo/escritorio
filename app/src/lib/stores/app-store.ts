@@ -387,6 +387,11 @@ const hideWhitespaceInPullRequestDiffKey =
 const commitSpellcheckEnabledDefault = true
 const commitSpellcheckEnabledKey = 'commit-spellcheck-enabled'
 
+const defaultTabSize: number = 8
+const minTabSize: number = 1
+const maxTabSize: number = 16
+const tabSizeKey: string = 'tab-size'
+
 const shellKey = 'shell'
 
 const repositoryIndicatorsEnabledKey = 'enable-repository-indicators'
@@ -513,6 +518,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private selectedBranchesTab = BranchesTab.Branches
   private selectedTheme = ApplicationTheme.System
   private currentTheme: ApplicableTheme = ApplicationTheme.Light
+  private selectedTabSize = defaultTabSize
 
   private useWindowsOpenSSH: boolean = false
 
@@ -996,6 +1002,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedBranchesTab: this.selectedBranchesTab,
       selectedTheme: this.selectedTheme,
       currentTheme: this.currentTheme,
+      selectedTabSize: this.selectedTabSize,
       apiRepositories: this.apiRepositoriesStore.getState(),
       useWindowsOpenSSH: this.useWindowsOpenSSH,
       showCommitLengthWarning: this.showCommitLengthWarning,
@@ -2182,6 +2189,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
     setPersistedTheme(this.selectedTheme)
 
     this.currentTheme = await getCurrentlyAppliedTheme()
+
+    this.selectedTabSize = clamp(
+      getNumber(tabSizeKey, defaultTabSize),
+      minTabSize,
+      maxTabSize
+    )
 
     themeChangeMonitor.onThemeChanged(theme => {
       this.currentTheme = theme
@@ -6493,6 +6506,21 @@ export class AppStore extends TypedBaseStore<IAppState> {
     setPersistedTheme(theme)
     this.selectedTheme = theme
     this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  /**
+   * Set the application-wide tab indentation
+   */
+  public _setSelectedTabSize(tabSize: number) {
+    const clamped = clamp(tabSize, minTabSize, maxTabSize)
+
+    if (!isNaN(clamped)) {
+      this.selectedTabSize = clamped
+      setNumber(tabSizeKey, clamped)
+      this.emitUpdate()
+    }
 
     return Promise.resolve()
   }
