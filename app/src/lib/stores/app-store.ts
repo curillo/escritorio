@@ -228,6 +228,7 @@ import {
   getObject,
   setObject,
   getFloatNumber,
+  LocalStorageManager,
 } from '../local-storage'
 import { ExternalEditorError, suggestedExternalEditor } from '../editors/shared'
 import { ApiRepositoriesStore } from './api-repositories-store'
@@ -349,7 +350,6 @@ const stashedFilesWidthConfigKey: string = 'stashed-files-width'
 const defaultPullRequestFileListWidth: number = 250
 const pullRequestFileListConfigKey: string = 'pull-request-files-width'
 
-const askToMoveToApplicationsFolderDefault: boolean = true
 const confirmRepoRemovalDefault: boolean = true
 const showCommitLengthWarningDefault: boolean = false
 const confirmDiscardChangesDefault: boolean = true
@@ -358,7 +358,6 @@ const confirmDiscardStashDefault: boolean = true
 const confirmCheckoutCommitDefault: boolean = true
 const askForConfirmationOnForcePushDefault = true
 const confirmUndoCommitDefault: boolean = true
-const askToMoveToApplicationsFolderKey: string = 'askToMoveToApplicationsFolder'
 const confirmRepoRemovalKey: string = 'confirmRepoRemoval'
 const showCommitLengthWarningKey: string = 'showCommitLengthWarning'
 const confirmDiscardChangesKey: string = 'confirmDiscardChanges'
@@ -467,8 +466,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
   private isUpdateAvailableBannerVisible: boolean = false
   private isUpdateShowcaseVisible: boolean = false
 
-  private askToMoveToApplicationsFolderSetting: boolean =
-    askToMoveToApplicationsFolderDefault
   private askForConfirmationOnRepositoryRemoval: boolean =
     confirmRepoRemovalDefault
   private confirmDiscardChanges: boolean = confirmDiscardChangesDefault
@@ -550,7 +547,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
     private readonly pullRequestCoordinator: PullRequestCoordinator,
     private readonly repositoryStateCache: RepositoryStateCache,
     private readonly apiRepositoriesStore: ApiRepositoriesStore,
-    private readonly notificationsStore: NotificationsStore
+    private readonly notificationsStore: NotificationsStore,
+    private readonly localStorageManager: LocalStorageManager
   ) {
     super()
 
@@ -972,7 +970,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       isUpdateShowcaseVisible: this.isUpdateShowcaseVisible,
       currentBanner: this.currentBanner,
       askToMoveToApplicationsFolderSetting:
-        this.askToMoveToApplicationsFolderSetting,
+        this.localStorageManager.get('image-diff-type'),
       askForConfirmationOnRepositoryRemoval:
         this.askForConfirmationOnRepositoryRemoval,
       askForConfirmationOnDiscardChanges: this.confirmDiscardChanges,
@@ -2088,11 +2086,6 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.updateResizableConstraints()
     // TODO: Initiliaze here for now... maybe move to dialog mounting
     this.updatePullRequestResizableConstraints()
-
-    this.askToMoveToApplicationsFolderSetting = getBoolean(
-      askToMoveToApplicationsFolderKey,
-      askToMoveToApplicationsFolderDefault
-    )
 
     this.askForConfirmationOnRepositoryRemoval = getBoolean(
       confirmRepoRemovalKey,
@@ -5439,11 +5432,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public _setAskToMoveToApplicationsFolderSetting(
     value: boolean
   ): Promise<void> {
-    this.askToMoveToApplicationsFolderSetting = value
-
-    setBoolean(askToMoveToApplicationsFolderKey, value)
+    this.localStorageManager.set('askToMoveToApplicationsFolder', value)
     this.emitUpdate()
-
     return Promise.resolve()
   }
 
