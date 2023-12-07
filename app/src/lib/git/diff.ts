@@ -96,6 +96,7 @@ const imageFileExtensions = new Set([
   '.webp',
   '.bmp',
   '.avif',
+  '.dds'
 ])
 
 /**
@@ -521,6 +522,10 @@ function getMediaType(extension: string) {
   }
   if (extension === '.avif') {
     return 'image/avif'
+  }
+
+  if (extension === '.dds') {
+    return 'image/vnd-ms.dds'
   }
 
   // fallback value as per the spec
