@@ -2408,6 +2408,13 @@ export class AppStore extends TypedBaseStore<IAppState> {
     const askForConfirmationWhenStashingAllChanges =
       changesState.stashEntry !== null
 
+    let displayViewInGitHub = true
+    if (selectedRepository instanceof Repository) {
+      const hasGitHubRepo = selectedRepository.gitHubRepository !== null
+      const hasRemoteUrl = selectedRepository.url !== null
+      displayViewInGitHub = hasGitHubRepo === hasRemoteUrl
+    }
+
     updatePreferredAppMenuItemLabels({
       ...labels,
       contributionTargetDefaultBranch,
@@ -2415,6 +2422,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       isStashedChangesVisible,
       hasCurrentPullRequest: currentPullRequest !== null,
       askForConfirmationWhenStashingAllChanges,
+      displayViewInGitHub,
     })
   }
 

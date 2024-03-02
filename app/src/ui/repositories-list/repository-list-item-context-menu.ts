@@ -12,7 +12,7 @@ interface IRepositoryListItemContextMenuConfig {
   shellLabel: string
   externalEditorLabel: string | undefined
   askForConfirmationOnRemoveRepository: boolean
-  onViewOnGitHub: (repository: Repositoryish) => void
+  onViewInBrowser: (repository: Repositoryish) => void
   onOpenInShell: (repository: Repositoryish) => void
   onShowRepository: (repository: Repositoryish) => void
   onOpenInExternalEditor: (repository: Repositoryish) => void
@@ -26,11 +26,19 @@ export const generateRepositoryListContextMenu = (
 ) => {
   const { repository } = config
   const missing = repository instanceof Repository && repository.missing
-  const github =
+  const doesGithubRepositoryExist =
     repository instanceof Repository && repository.gitHubRepository != null
+  const hasOriginUrl =
+    repository instanceof Repository && repository.url != null
   const openInExternalEditor = config.externalEditorLabel
     ? `Open in ${config.externalEditorLabel}`
     : DefaultEditorLabel
+
+  let viewInBrowserLabel = 'View on GitHub'
+
+  if (!doesGithubRepositoryExist && hasOriginUrl) {
+    viewInBrowserLabel = 'View in Browser'
+  }
 
   const items: ReadonlyArray<IMenuItem> = [
     ...buildAliasMenuItems(config),
@@ -44,9 +52,9 @@ export const generateRepositoryListContextMenu = (
     },
     { type: 'separator' },
     {
-      label: 'View on GitHub',
-      action: () => config.onViewOnGitHub(repository),
-      enabled: github,
+      label: viewInBrowserLabel,
+      action: () => config.onViewInBrowser(repository),
+      enabled: hasOriginUrl,
     },
     {
       label: `Open in ${config.shellLabel}`,
